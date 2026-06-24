@@ -1515,7 +1515,9 @@ function mergeSummaries(a, b) {
 // Manter permanentemente para o histórico ficar correto.
 // Para adicionar novas vendas manuais, basta acrescentar ao array.
 // ═══════════════════════════════════════════════════════════════
-const MANUAL_SALES = [];
+const MANUAL_SALES = [
+  { date: '2026-06-20', productName: 'Sistema de Venda Por Sugestão Invisível + Salário Automático (Manual)', netAmount: 239.93, paymentMethod: 'card', status: 'approved' },
+];
 
 function getManualSalesInRange(startDate, endDate) {
   return MANUAL_SALES.filter(s => s.date >= startDate && s.date <= endDate);
