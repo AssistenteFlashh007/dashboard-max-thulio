@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Granja dos Ovos de Ouro - Max Thúlio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-canvas: #0b0b14;
+    --bg-surface: #13110d;
+    --bg-elevated: #1a170f;
+    --bg-hover: #221e14;
+    --border-wood: rgba(139,90,43,0.12);
+    --border-wood-hover: rgba(139,90,43,0.25);
+    --border-gold: rgba(234,179,8,0.20);
+    --text-primary: #f0ede8;
+    --text-secondary: #b8a898;
+    --text-muted: #7c6b5a;
+    --accent: #f97316;
+    --accent-light: #fb923c;
+    --accent-glow: rgba(249,115,22,0.12);
+    --gold-400: #facc15;
+    --gold-500: #eab308;
+    --gold-600: #ca8a04;
+    --gold-glow: rgba(234,179,8,0.15);
+    --gold-warm: rgba(251,191,36,0.08);
+    --green: #34d399;
+    --green-dim: rgba(52,211,153,0.08);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.08);
+    --yellow: #fbbf24;
+    --yellow-dim: rgba(251,191,36,0.08);
+    --earth-900: #1a1208;
+    --earth-800: #292016;
+    --earth-700: #3d2e1e;
+    --earth-500: #8b5a2b;
+    --earth-400: #a0714b;
+    --earth-300: #c4956a;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.45);
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-full: 999px;
+    --transition: 200ms ease;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Ambient warm glow */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120%;
+    height: 60%;
+    background: radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.04) 0%, rgba(234,179,8,0.02) 30%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Golden dust particles */
+  .dust-particle {
+    position: fixed;
+    width: 3px;
+    height: 3px;
+    background: var(--gold-400);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .dust-1 { top: 20%; left: 15%; animation: dustFloat 18s ease-in-out infinite; }
+  .dust-2 { top: 50%; left: 75%; animation: dustFloat 22s ease-in-out 4s infinite; }
+  .dust-3 { top: 70%; left: 40%; animation: dustFloat 16s ease-in-out 8s infinite; }
+  .dust-4 { top: 35%; left: 60%; animation: dustFloat 20s ease-in-out 2s infinite; }
+
+  @keyframes dustFloat {
+    0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+    25%  { opacity: 0.15; transform: translate(15px, -25px) scale(1); }
+    50%  { opacity: 0.2; transform: translate(30px, -10px) scale(0.8); }
+    75%  { opacity: 0.1; transform: translate(45px, -30px) scale(1.1); }
+    100% { opacity: 0; transform: translate(60px, 0) scale(0.5); }
+  }
+
+  /* ─── Loading Overlay ─── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(11,11,20,0.92);
+    backdrop-filter: blur(8px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .loading-overlay.active { display: flex; }
+
+  .loading-scene {
+    position: relative;
+    width: 200px;
+    height: 160px;
+  }
+  .loading-scene svg { width: 100%; height: 100%; }
+
+  .loading-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+  .loading-bar {
+    width: 180px;
+    height: 6px;
+    background: var(--earth-900);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    border: 1px solid var(--border-wood);
+  }
+  .loading-bar-fill {
+    height: 100%;
+    width: 30%;
+    background: linear-gradient(90deg, var(--gold-600), var(--gold-400), var(--gold-600));
+    background-size: 200% 100%;
+    border-radius: var(--radius-full);
+    animation: shimmerBar 1.5s ease-in-out infinite;
+  }
+  @keyframes shimmerBar {
+    0% { background-position: -200% 0; width: 20%; }
+    50% { width: 60%; }
+    100% { background-position: 200% 0; width: 20%; }
+  }
+
+  /* ─── Header ─── */
+  .header {
+    background: var(--bg-surface);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-wood);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(12px);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-gate {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .header h1 .gold-text {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 40%, #d97706 70%, #fbbf24 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmerGold 4s linear infinite;
+  }
+  @keyframes shimmerGold {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+  .header .subtitle {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .last-update {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .btn-refresh {
+    background: linear-gradient(135deg, var(--accent), #ea580c);
+    border: none;
+    color: white;
+    padding: 9px 22px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-refresh:hover {
+    box-shadow: 0 0 24px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+  }
+
+  /* ─── Filters ─── */
+  .filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 40px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-wood);
+  }
+  .filter-btn {
+    padding: 8px 20px;
+    border: 1px solid var(--border-wood);
+    background: var(--earth-900);
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    letter-spacing: 0.01em;
+  }
+  .filter-btn:hover {
+    border-color: var(--border-wood-hover);
+    color: var(--text-secondary);
+    background: var(--earth-800);
+    transform: rotate(-0.5deg);
+  }
+  .filter-btn.active {
+    background: linear-gradient(135deg, var(--accent), #ea580c);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .filter-btn-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-custom-wrap {
+    position: relative;
+  }
+  .custom-picker {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 20;
+    min-width: 240px;
+    padding: 14px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-wood-hover);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg), 0 0 32px var(--gold-glow);
+    flex-direction: column;
+    gap: 10px;
+  }
+  .custom-picker.open { display: flex; }
+  .custom-picker-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .custom-picker-row label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .custom-picker-row input[type="date"] {
+    padding: 8px 10px;
+    background: var(--earth-900);
+    border: 1px solid var(--border-wood);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    color-scheme: dark;
+  }
+  .custom-picker-row input[type="date"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .custom-picker-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .custom-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .custom-btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-wood);
+    color: var(--text-muted);
+  }
+  .custom-btn-secondary:hover {
+    color: var(--text-secondary);
+    border-color: var(--border-wood-hover);
+  }
+  .custom-btn-primary {
+    background: linear-gradient(135deg, var(--accent), #ea580c);
+    border: 1px solid var(--accent);
+    color: white;
+  }
+  .custom-btn-primary:hover {
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  /* ─── Content ─── */
+  .content {
+    padding: 28px 40px 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── KPI Cards ─── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-wood);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    transition: all 300ms ease;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 80px;
+    height: 80px;
+    opacity: 0.04;
+    transition: opacity 300ms ease;
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+  .card:hover {
+    border-color: var(--border-wood-hover);
+    box-shadow: var(--shadow-md), 0 0 40px var(--gold-glow);
+    transform: translateY(-3px);
+  }
+  .card:hover::before { opacity: 0.08; }
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 24px; right: 24px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--card-accent, var(--gold-500)), transparent);
+    opacity: 0;
+    transition: opacity 300ms ease;
+    border-radius: 2px;
+  }
+  .card:hover::after { opacity: 0.6; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-icon svg { width: 22px; height: 22px; }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .card-sublabel {
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--earth-500);
+    letter-spacing: 0.02em;
+    margin-top: 1px;
+  }
+  .card-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-value.positive { color: var(--green); }
+  .card-value.negative { color: var(--red); }
+  .card-value.golden { color: var(--gold-400); }
+  .card-value.warning { color: var(--yellow); }
+
+  /* ─── Galinheiro Central ─── */
+  .galinheiro {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-wood);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    position: relative;
+    overflow: hidden;
+    min-height: 180px;
+  }
+  .galinheiro::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 80%, rgba(251,191,36,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .chicken-stage {
+    position: relative;
+    width: 200px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .galinheiro-status {
+    text-align: left;
+  }
+  .galinheiro-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .galinheiro-message {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold-400);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .galinheiro-submsg {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+
+  /* ─── Fence Divider ─── */
+  .fence-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 4px 0;
+    margin-bottom: 20px;
+    opacity: 0.12;
+  }
+  .fence-post {
+    width: 4px;
+    height: 16px;
+    background: var(--earth-500);
+    border-radius: 1px;
+  }
+  .fence-rail {
+    width: 40px;
+    height: 2px;
+    background: var(--earth-500);
+    border-radius: 1px;
+  }
+
+  /* ─── Sections ─── */
+  .sections-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-wood);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.01em;
+  }
+  .section-title .section-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-wood-hover), transparent);
+    margin-left: 8px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border-wood);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+  .stat-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── Payment Bar ─── */
+  .payment-bar {
+    display: flex;
+    height: 8px;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin: 14px 0 12px;
+    background: var(--earth-900);
+    gap: 2px;
+    border: 1px solid var(--border-wood);
+  }
+  .payment-bar > div { border-radius: var(--radius-full); transition: width 800ms ease-out; }
+  .payment-bar .pix { background: var(--green); }
+  .payment-bar .cartao { background: var(--accent); }
+  .payment-bar .boleto { background: var(--yellow); }
+  .payment-bar .outros { background: var(--text-muted); }
+
+  .payment-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ─── Products ─── */
+  .product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 14px;
+    margin-bottom: 6px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-wood);
+    transition: all var(--transition);
+  }
+  .product-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-wood-hover);
+    transform: translateX(3px);
+  }
+  .product-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .product-count {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--gold-400);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── Approval Bars ─── */
+  .approval-rate {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+  }
+  .approval-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--earth-900);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    border: 1px solid var(--border-wood);
+  }
+  .approval-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 800ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ─── Chicken Image States ─── */
+  .chicken-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chicken-img {
+    width: 140px;
+    height: auto;
+    object-fit: contain;
+    position: relative;
+    z-index: 2;
+    transition: all 400ms ease;
+  }
+  .chicken-scene .ovo {
+    position: absolute;
+    width: 32px;
+    height: auto;
+    z-index: 1;
+  }
+  .chicken-scene .sparkle-img {
+    position: absolute;
+    width: 24px;
+    height: auto;
+    z-index: 3;
+  }
+
+  /* Legendary state */
+  .scene-legendary .chicken-img {
+    width: 160px;
+    animation: legendaryPulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(251,191,36,0.5));
+  }
+  .scene-legendary .ovo {
+    animation: eggFloat 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(251,191,36,0.4));
+  }
+  .scene-legendary .ovo-1 { top: 25%; left: 2px; width: 26px; animation-delay: 0s; z-index: 1; }
+  .scene-legendary .ovo-2 { top: 20%; right: 5px; width: 24px; animation-delay: 0.4s; z-index: 1; }
+  .scene-legendary .ovo-3 { top: 50%; left: 0; width: 22px; animation-delay: 0.8s; z-index: 1; }
+  .scene-legendary .ovo-4 { top: 45%; right: 0; width: 20px; animation-delay: 1.1s; z-index: 1; }
+  .scene-legendary .ovo-5 { bottom: 8px; left: 30%; width: 24px; animation-delay: 0.3s; z-index: 3; }
+  .scene-legendary .ovo-6 { bottom: 5px; right: 28%; width: 22px; animation-delay: 0.7s; z-index: 3; }
+  .scene-legendary .sp-1 { top: 0; right: 5px; width: 26px; animation: sparklePop 1.2s ease-in-out infinite; }
+  .scene-legendary .sp-2 { top: 10px; left: 0; width: 20px; animation: sparklePop 1.5s ease-in-out 0.3s infinite; }
+  .scene-legendary .sp-3 { bottom: 25px; right: 0; width: 22px; animation: sparklePop 1.8s ease-in-out 0.6s infinite; }
+  .scene-legendary .sp-4 { top: 30px; right: 25%; width: 16px; animation: sparklePop 1.4s ease-in-out 0.9s infinite; z-index: 5; }
+  .scene-legendary .sp-5 { bottom: 40px; left: 5px; width: 18px; animation: sparklePop 1.6s ease-in-out 1.2s infinite; }
+
+  /* Happy state */
+  .scene-happy .chicken-img {
+    width: 140px;
+    animation: happyBob 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(251,191,36,0.2));
+  }
+  .scene-happy .ovo {
+    animation: eggFloat 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px rgba(251,191,36,0.3));
+  }
+  .scene-happy .ovo-1 { top: 30%; right: 8px; width: 24px; animation-delay: 0.2s; z-index: 1; }
+  .scene-happy .ovo-2 { top: 35%; left: 8px; width: 22px; animation-delay: 0.6s; z-index: 1; }
+  .scene-happy .ovo-3 { bottom: 6px; left: 32%; width: 22px; animation-delay: 1s; z-index: 3; }
+  .scene-happy .ovo-4 { bottom: 8px; right: 30%; width: 20px; animation-delay: 0.4s; z-index: 3; }
+  .scene-happy .sp-1 { top: 5px; right: 10px; width: 20px; animation: sparklePop 2s ease-in-out infinite; }
+  .scene-happy .sp-2 { top: 15px; left: 5px; width: 16px; animation: sparklePop 2.2s ease-in-out 0.5s infinite; }
+  .scene-happy .sp-3 { bottom: 30px; right: 5px; width: 18px; animation: sparklePop 2.4s ease-in-out 1s infinite; }
+
+  /* Angry/sad state */
+  .scene-angry .chicken-img {
+    width: 140px;
+    animation: sadShake 1.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(248,113,113,0.3)) saturate(0.85);
+  }
+
+  @keyframes legendaryPulse {
+    0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 20px rgba(251,191,36,0.5)); }
+    50% { transform: translateY(-8px) scale(1.03); filter: drop-shadow(0 0 30px rgba(251,191,36,0.7)); }
+  }
+  @keyframes happyBob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-5px) rotate(-2deg); }
+    75% { transform: translateY(-2px) rotate(2deg); }
+  }
+  @keyframes sadShake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    20% { transform: translateX(-3px) rotate(-2deg); }
+    40% { transform: translateX(3px) rotate(2deg); }
+    60% { transform: translateX(-2px) rotate(-1deg); }
+    80% { transform: translateX(2px) rotate(1deg); }
+  }
+  @keyframes eggFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-6px) rotate(5deg); }
+  }
+  @keyframes sparklePop {
+    0%, 100% { opacity: 0.2; transform: scale(0.6) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.2) rotate(20deg); }
+  }
+
+  /* ─── Tabs ─── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .tab-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(19,17,13,0.92);
+    border-top: 1px solid var(--border-wood);
+    display: flex;
+    z-index: 50;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.4), 0 -1px 0 var(--gold-warm);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.02em;
+    position: relative;
+  }
+  .tab-btn:hover { color: var(--text-secondary); }
+  .tab-btn.active { color: var(--gold-400); }
+  .tab-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 22%;
+    right: 22%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold-400), transparent);
+    border-radius: 2px;
+    box-shadow: 0 0 14px var(--gold-glow);
+  }
+  .tab-btn .tab-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  /* ─── Métricas Tab ─── */
+  .metricas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .campaign-block {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-wood);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: all 300ms ease;
+  }
+  .campaign-block:hover {
+    border-color: var(--border-wood-hover);
+    box-shadow: var(--shadow-md), 0 0 32px var(--gold-glow);
+  }
+  .campaign-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-wood);
+  }
+  .campaign-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--gold-warm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .campaign-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .campaign-sublabel {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .metrics-grid.metrics-grid-2x2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .metric-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-wood);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    transition: all var(--transition);
+  }
+  .metric-card:hover {
+    border-color: var(--border-wood-hover);
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+  }
+  .metric-icon {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 8px;
+  }
+  .metric-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    min-height: 22px;
+  }
+  .metric-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .metric-value.golden { color: var(--gold-400); }
+  .metric-value.green { color: var(--green); }
+  .metric-value.red { color: var(--red); }
+  .metric-value.small { font-size: 15px; font-weight: 700; }
+  .metric-sublabel {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--earth-500);
+    margin-top: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 1200px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .sections-grid { grid-template-columns: 1fr; }
+    .galinheiro { flex-direction: column; text-align: center; }
+    .metricas-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 12px; padding: 16px 20px; }
+    .content { padding: 20px; }
+    .tab-content.active { display: flex; flex-direction: column; }
+    .filters { padding: 12px 20px; flex-wrap: wrap; }
+    .card-value { font-size: 26px; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+    .campaign-block { padding: 18px; }
+    .tab-btn { font-size: 11px; padding: 12px 8px; gap: 6px; }
+    .tab-btn .tab-icon { width: 18px; height: 18px; }
+
+    /* Ordem mobile: Galinheiro > Faturamento > ROAS > Investimento > Lucro > Ticket */
+    .galinheiro { order: 1; margin-bottom: 16px; }
+    .cards-grid { order: 2; margin-bottom: 20px; }
+    .fence-divider { order: 3; }
+    .sections-grid { order: 4; }
+
+    .card-revenue { order: 1; }
+    .card-roas    { order: 2; }
+    .card-spend   { order: 3; }
+    .card-profit  { order: 4; }
+    .card-ticket  { order: 5; }
+  }
+
+  /* ─── Egg Rain ─── */
+  .egg-rain-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99;
+    overflow: hidden;
+  }
+  .egg-drop {
+    position: absolute;
+    top: -60px;
+    font-size: 32px;
+    animation: eggFall linear forwards;
+    filter: drop-shadow(0 0 8px rgba(251,191,36,0.4));
+  }
+  @keyframes eggFall {
+    0% {
+      transform: translateY(0) rotate(0deg) scale(0.6);
+      opacity: 0;
+    }
+    8% {
+      opacity: 1;
+      transform: translateY(8vh) rotate(20deg) scale(1);
+    }
+    70% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(110vh) rotate(360deg) scale(0.8);
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="dust-particle dust-1"></div>
+<div class="dust-particle dust-2"></div>
+<div class="dust-particle dust-3"></div>
+<div class="dust-particle dust-4"></div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-scene" style="display:flex;align-items:center;justify-content:center;">
+    <img src="assets/popofy.png" alt="Popofy" style="height:250px;width:auto;object-fit:contain;animation:loadingBob 0.8s ease-in-out infinite;filter:drop-shadow(0 0 24px rgba(251,191,36,0.5));">
+  </div>
+  <div class="loading-text">Coletando dados da granja<span class="loading-dots"></span></div>
+  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-gate">
+      <img src="assets/popofy.png" alt="Popofy" style="height:100px;width:auto;object-fit:contain;">
+    </div>
+    <div>
+      <h1><span class="gold-text">Granja dos Ovos de Ouro</span></h1>
+      <div class="subtitle">Painel do Fazendeiro Max Thúlio</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="last-update" id="lastUpdate"></span>
+    <button class="btn-refresh" onclick="loadData()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M13 1v4h-4M1 13V9h4M1.5 5A6 6 0 0 1 12.34 3.34M12.5 9A6 6 0 0 1 1.66 10.66" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      Coletar Dados
+    </button>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filters">
+  <button class="filter-btn active" data-period="today" onclick="setPeriod('today')">Hoje</button>
+  <button class="filter-btn" data-period="yesterday" onclick="setPeriod('yesterday')">Ontem</button>
+  <button class="filter-btn" data-period="last7" onclick="setPeriod('last7')">Últimos 7 Dias</button>
+  <button class="filter-btn" data-period="month" onclick="setPeriod('month')">Esse Mês</button>
+  <button class="filter-btn" data-period="total" onclick="setPeriod('total')">Total</button>
+  <div class="filter-custom-wrap">
+    <button class="filter-btn filter-btn-custom" data-period="custom" onclick="toggleCustomPicker(event)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="9" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="1.5" y1="5" x2="10.5" y2="5" stroke="currentColor" stroke-width="1.2"/><line x1="4" y1="1.5" x2="4" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="8" y1="1.5" x2="8" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <span id="customLabel">Personalizado</span>
+    </button>
+    <div class="custom-picker" id="customPicker">
+      <div class="custom-picker-row">
+        <label for="customFrom">De</label>
+        <input type="date" id="customFrom">
+      </div>
+      <div class="custom-picker-row">
+        <label for="customTo">Até</label>
+        <input type="date" id="customTo">
+      </div>
+      <div class="custom-picker-actions">
+        <button type="button" class="custom-btn custom-btn-secondary" onclick="closeCustomPicker()">Cancelar</button>
+        <button type="button" class="custom-btn custom-btn-primary" onclick="applyCustomRange()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="content">
+
+  <!-- ═══ TAB: VENDAS $ ═══ -->
+  <div class="tab-content tab-vendas active">
+
+  <!-- KPI Cards -->
+  <div class="cards-grid">
+    <!-- Faturamento -->
+    <div class="card card-revenue" style="--card-accent: var(--green)">
+      <div class="card-header">
+        <div class="card-icon" style="background:var(--green-dim);">
+          <svg viewBox="0 0 24 24" fill="none">
+            <ellipse cx="12" cy="13" rx="7" ry="9" fill="url(#eggGreen)"/>
+            <ellipse cx="10.5" cy="10" rx="2" ry="3" fill="white" opacity="0.25"/>
+            <defs><radialGradient id="eggGreen" cx="40%" cy="35%"><stop offset="0%" stop-color="#a7f3d0"/><stop offset="100%" stop-color="#34d399"/></radialGradient></defs>
+          </svg>
+        </div>
+        <div>
+          <div class="card-label">Ovos de Ouro Coletados</div>
+          <div class="card-sublabel">Faturamento líquido</div>
+        </div>
+      </div>
+      <div class="card-value" id="revenue">-</div>
+    </div>
+
+    <!-- Gastos -->
+    <div class="card card-spend" style="--card-accent: var(--red)">
+      <div class="card-header">
+        <div class="card-icon" style="background:var(--red-dim);">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="7" y="8" width="10" height="12" rx="2" fill="#fca5a5"/>
+            <path d="M9 8 L12 5 L15 8" stroke="#ef4444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <text x="12" y="17" text-anchor="middle" font-size="7" font-weight="800" fill="#991b1b">$</text>
+          </svg>
+        </div>
+        <div>
+          <div class="card-label">Investimento em Ração</div>
+          <div class="card-sublabel">Gastos com anúncios</div>
+        </div>
+      </div>
+      <div class="card-value" style="color:var(--red)" id="adSpend">-</div>
+    </div>
+
+    <!-- ROAS -->
+    <div class="card card-roas" style="--card-accent: var(--gold-500)">
+      <div class="card-header">
+        <div class="card-icon" style="background:var(--gold-warm);">
+          <svg viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="4" x2="12" y2="8" stroke="#d97706" stroke-width="2" stroke-linecap="round"/>
+            <path d="M5 12 L12 8 L19 12" stroke="#eab308" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <circle cx="6" cy="14" r="3" fill="#fbbf24" opacity="0.5"/>
+            <circle cx="18" cy="14" r="3" fill="#fbbf24" opacity="0.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-label">ROAS</div>
+          <div class="card-sublabel">Eficiência da granja</div>
+        </div>
+      </div>
+      <div class="card-value" id="roas">-</div>
+    </div>
+
+    <!-- Lucro -->
+    <div class="card card-profit" style="--card-accent: var(--gold-500)">
+      <div class="card-header">
+        <div class="card-icon" style="background:var(--gold-warm);">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="5" y="10" width="14" height="10" rx="2" fill="#a0714b"/>
+            <path d="M5 10 L8 6 L16 6 L19 10" stroke="#8b5a2b" stroke-width="1.5" fill="#c4956a"/>
+            <circle cx="12" cy="15" r="2.5" fill="#facc15"/>
+            <text x="12" y="17" text-anchor="middle" font-size="4" font-weight="800" fill="#78350f">$</text>
+          </svg>
+        </div>
+        <div>
+          <div class="card-label">Colheita Líquida</div>
+          <div class="card-sublabel">Lucro real</div>
+        </div>
+      </div>
+      <div class="card-value" id="profit">-</div>
+    </div>
+
+    <!-- Ticket Médio (Desafio 30D) -->
+    <div class="card card-ticket" style="--card-accent: var(--gold-500)">
+      <div class="card-header">
+        <div class="card-icon" style="background:var(--gold-warm);">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="7" width="18" height="12" rx="2" fill="#facc15" opacity="0.25"/>
+            <rect x="3" y="7" width="18" height="12" rx="2" stroke="#d97706" stroke-width="1.5" fill="none"/>
+            <circle cx="12" cy="13" r="3" fill="#facc15"/>
+            <text x="12" y="15" text-anchor="middle" font-size="5" font-weight="800" fill="#78350f">$</text>
+            <line x1="6" y1="11" x2="7" y2="11" stroke="#d97706" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="17" y1="11" x2="18" y2="11" stroke="#d97706" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="card-label">Ticket Médio</div>
+          <div class="card-sublabel">Desafio 30D · Total geral</div>
+        </div>
+      </div>
+      <div class="card-value" id="avgTicketDesafioCard" style="color:var(--gold-400)">-</div>
+    </div>
+  </div>
+
+  <!-- Galinheiro Central -->
+  <div class="galinheiro">
+    <div class="chicken-stage" id="chickenStage">
+      <!-- Populated by JS based on ROAS -->
+    </div>
+    <div class="galinheiro-status">
+      <div class="galinheiro-label">Status da Granja</div>
+      <div class="galinheiro-message" id="granjaMessage">Carregando...</div>
+      <div class="galinheiro-submsg" id="granjaSubmsg">Aguardando dados</div>
+    </div>
+  </div>
+
+  <!-- Fence Divider -->
+  <div class="fence-divider">
+    <div class="fence-post"></div><div class="fence-rail"></div>
+    <div class="fence-post"></div><div class="fence-rail"></div>
+    <div class="fence-post"></div><div class="fence-rail"></div>
+    <div class="fence-post"></div><div class="fence-rail"></div>
+    <div class="fence-post"></div><div class="fence-rail"></div>
+    <div class="fence-post"></div><div class="fence-rail"></div>
+    <div class="fence-post"></div><div class="fence-rail"></div>
+    <div class="fence-post"></div>
+  </div>
+
+  <!-- Sections -->
+  <div class="sections-grid">
+    <!-- Vendas -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="section-icon" viewBox="0 0 20 20" fill="none">
+          <ellipse cx="10" cy="14" rx="8" ry="4" fill="#5c4530"/>
+          <path d="M3 12 Q6 8 10 12 Q14 8 17 12" stroke="#8b5a2b" stroke-width="1.5" fill="none"/>
+          <ellipse cx="8" cy="12" rx="2.5" ry="3" fill="#fbbf24"/>
+          <ellipse cx="13" cy="12" rx="2.5" ry="3" fill="#fbbf24"/>
+        </svg>
+        Colheita do Dia
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Vendas Aprovadas</span>
+        <span class="stat-value" id="approvedOrders" style="color:var(--green)">-</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Vendas Pendentes</span>
+        <span class="stat-value" id="pendingOrders" style="color:var(--yellow)">-</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Vendas Reembolsadas</span>
+        <span class="stat-value" id="refundedOrders" style="color:var(--red)">-</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Valor Pendente</span>
+        <span class="stat-value" id="pendingRevenue">-</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Valor Reembolsado</span>
+        <span class="stat-value" id="refundedRevenue">-</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Ticket Médio (Desafio 30D)</span>
+        <span class="stat-value" id="avgTicketDesafio" style="color:var(--gold-400)">-</span>
+      </div>
+    </div>
+
+    <!-- Pagamentos -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="section-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="7" cy="12" r="5" fill="#d97706" opacity="0.6"/>
+          <circle cx="11" cy="10" r="5" fill="#eab308" opacity="0.7"/>
+          <circle cx="13" cy="13" r="5" fill="#facc15" opacity="0.8"/>
+          <text x="11" y="13" text-anchor="middle" font-size="5" font-weight="800" fill="#78350f">$</text>
+        </svg>
+        Formas de Coleta
+      </div>
+      <div class="payment-bar" id="paymentBar"></div>
+      <div class="payment-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Pix</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Cartão</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Boleto</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--text-muted)"></div>Outros</div>
+      </div>
+      <div style="margin-top: 12px">
+        <div class="stat-row"><span class="stat-label">Pix</span><span class="stat-value" id="pixCount">-</span></div>
+        <div class="stat-row"><span class="stat-label">Cartão</span><span class="stat-value" id="cardCount">-</span></div>
+        <div class="stat-row"><span class="stat-label">Boleto</span><span class="stat-value" id="boletoCount">-</span></div>
+        <div class="stat-row"><span class="stat-label">Outros</span><span class="stat-value" id="othersCount">-</span></div>
+      </div>
+      <div style="margin-top: 14px">
+        <div class="section-title" style="font-size:11px;margin-bottom:8px">
+          <svg class="section-icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px">
+            <circle cx="10" cy="10" r="8" stroke="#8b5a2b" stroke-width="1.5" fill="none"/>
+            <path d="M10 4 L10 10 L14 13" stroke="#d97706" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          </svg>
+          Taxa de Eclosão
+        </div>
+        <div class="approval-rate">
+          <span class="stat-label">Cartão</span>
+          <div class="approval-bar-bg"><div class="approval-bar-fill" id="cardApprovalBar" style="width:0%;background:var(--accent)"></div></div>
+          <span class="stat-value" id="cardApproval">-</span>
+        </div>
+        <div class="approval-rate">
+          <span class="stat-label">Pix</span>
+          <div class="approval-bar-bg"><div class="approval-bar-fill" id="pixApprovalBar" style="width:0%;background:var(--green)"></div></div>
+          <span class="stat-value" id="pixApproval">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Produtos -->
+    <div class="section">
+      <div class="section-title">
+        <svg class="section-icon" viewBox="0 0 20 20" fill="none">
+          <rect x="3" y="7" width="14" height="10" rx="1.5" fill="#5c4530"/>
+          <rect x="3" y="7" width="14" height="3" rx="1" fill="#8b5a2b"/>
+          <ellipse cx="8" cy="13" rx="2" ry="2.5" fill="#facc15"/>
+          <ellipse cx="13" cy="14" rx="2" ry="2.5" fill="#fbbf24"/>
+        </svg>
+        Produção por Galinheiro
+      </div>
+      <div id="productsList">
+        <div class="stat-label" style="text-align:center;padding:20px">Nenhuma venda por aqui</div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /tab-vendas -->
+
+</div>
+
+<script>
+// ─── Egg Rain Effect ───
+function eggRain() {
+  const container = document.createElement('div');
+  container.className = 'egg-rain-container';
+  document.body.appendChild(container);
+
+  const emojis = ['🥚', '🪺', '✨'];
+  const totalEggs = 25;
+
+  for (let i = 0; i < totalEggs; i++) {
+    const egg = document.createElement('div');
+    egg.className = 'egg-drop';
+    egg.textContent = emojis[Math.random() > 0.3 ? 0 : (Math.random() > 0.5 ? 1 : 2)];
+    egg.style.left = (Math.random() * 100) + 'vw';
+    egg.style.fontSize = (24 + Math.random() * 20) + 'px';
+    egg.style.animationDuration = (2 + Math.random() * 2.5) + 's';
+    egg.style.animationDelay = (Math.random() * 1.8) + 's';
+    container.appendChild(egg);
+  }
+
+  setTimeout(() => container.remove(), 6000);
+}
+
+// ─── Chicken Image Templates (3 states with real PNGs) ───
+const ASSETS = 'assets/';
+
+function chickenScene_legendary() {
+  return `<div class="chicken-scene scene-legendary">
+    <img class="chicken-img" src="${ASSETS}galinha-lendaria.png" alt="Galinha Lendária">
+    <img class="ovo ovo-1" src="${ASSETS}ovo.png" alt="">
+    <img class="ovo ovo-2" src="${ASSETS}ovo.png" alt="">
+    <img class="ovo ovo-3" src="${ASSETS}ovo.png" alt="">
+    <img class="ovo ovo-4" src="${ASSETS}ovo.png" alt="">
+    <img class="ovo ovo-5" src="${ASSETS}ovo.png" alt="">
+    <img class="ovo ovo-6" src="${ASSETS}ovo.png" alt="">
+    <img class="sparkle-img sp-1" src="${ASSETS}sparkle.png" alt="">
+    <img class="sparkle-img sp-2" src="${ASSETS}sparkle.png" alt="">
+    <img class="sparkle-img sp-3" src="${ASSETS}sparkle.png" alt="">
+    <img class="sparkle-img sp-4" src="${ASSETS}sparkle.png" alt="">
+    <img class="sparkle-img sp-5" src="${ASSETS}sparkle.png" alt="">
+  </div>`;
+}
+
+function chickenScene_happy() {
+  return `<div class="chicken-scene scene-happy">
+    <img class="chicken-img" src="${ASSETS}galinha-feliz.png" alt="Galinha Feliz">
+    <img class="ovo ovo-1" src="${ASSETS}ovo.png" alt="">
+    <img class="ovo ovo-2" src="${ASSETS}ovo.png" alt="">
+    <img class="ovo ovo-3" src="${ASSETS}ovo.png" alt="">
+    <img class="ovo ovo-4" src="${ASSETS}ovo.png" alt="">
+    <img class="sparkle-img sp-1" src="${ASSETS}sparkle.png" alt="">
+    <img class="sparkle-img sp-2" src="${ASSETS}sparkle.png" alt="">
+    <img class="sparkle-img sp-3" src="${ASSETS}sparkle.png" alt="">
+  </div>`;
+}
+
+function chickenScene_angry() {
+  return `<div class="chicken-scene scene-angry">
+    <img class="chicken-img" src="${ASSETS}galinha-brava.png" alt="Galinha Brava">
+  </div>`;
+}
+
+// ─── State Logic (3 states) ───
+
+function getChickenState(roas) {
+  // Arredonda para 2 casas pra bater com o valor exibido (evita caso ROAS=1.995 exibir "2.00" mas nao entrar na lendaria)
+  const r = Math.round(roas * 100) / 100;
+  if (r >= 2) return { html: chickenScene_legendary(), color: 'var(--gold-400)', bg: 'var(--gold-warm)', msg: 'A galinha está LENDÁRIA!', sub: `ROAS de ${r.toFixed(2)}x - chuva de ovos de ouro!` };
+  if (r >= 1) return { html: chickenScene_happy(), color: 'var(--green)', bg: 'var(--green-dim)', msg: 'A granja está produzindo!', sub: `ROAS de ${r.toFixed(2)}x - a galinha tá feliz botando seus ovos` };
+  return { html: chickenScene_angry(), color: 'var(--red)', bg: 'var(--red-dim)', msg: 'A galinha tá chorando...', sub: `ROAS de ${r.toFixed(2)}x - precisamos reverter isso!` };
+}
+
+function updateChicken(roas) {
+  const state = getChickenState(roas);
+  document.getElementById('chickenStage').innerHTML = state.html;
+  document.getElementById('granjaMessage').textContent = state.msg;
+  document.getElementById('granjaMessage').style.color = state.color;
+  document.getElementById('granjaSubmsg').textContent = state.sub;
+}
+
+// ─── API Logic ───
+
+const API_URL = 'https://mcp.utmify.com.br/mcp/?token=kUyqeniajrqb7PHsooatEhF3xyAu4aDV&resources=gs,gm,gu,gwe,ga,gp,gwa,gr,gtf,gpc,gcs';
+const DASHBOARD_ID = '6a3829cc5126abb07d967714';
+
+// ═══════════════════════════════════════════════════════════════
+// SNAPSHOT HISTÓRICO — dados da UTMify antiga (21/05 a 24/05)
+// Após 25/05, dados vêm da nova conta UTMify via API.
+// ═══════════════════════════════════════════════════════════════
+const MIGRATION_DATE = '2026-06-19';
+let SNAPSHOT = null;
+
+async function loadSnapshot() {
+  if (SNAPSHOT) return SNAPSHOT;
+  try {
+    const res = await fetch('snapshot-historico.json');
+    SNAPSHOT = await res.json();
+  } catch (e) {
+    console.warn('Snapshot histórico não disponível:', e.message);
+    SNAPSHOT = { byDay: {} };
+  }
+  return SNAPSHOT;
+}
+
+function prevDay(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function aggregateSnapshot(startDate, endDate) {
+  const summary = {
+    ordersCount: { approved: 0, pending: 0, refunded: 0, byProductName: [] },
+    comissions: { net: 0, pendingGrossRevenue: 0, refundedGrossRevenue: 0 },
+    statistics: {
+      pix: { approved: { ordersCount: 0, netAmount: 0 }, pending: { ordersCount: 0 }, refused: { ordersCount: 0 } },
+      card: { approved: { ordersCount: 0, netAmount: 0 }, pending: { ordersCount: 0 }, refused: { ordersCount: 0 } },
+      boleto: { approved: { ordersCount: 0, netAmount: 0 }, pending: { ordersCount: 0 }, refused: { ordersCount: 0 } },
+      others: { approved: { ordersCount: 0, netAmount: 0 }, pending: { ordersCount: 0 }, refused: { ordersCount: 0 } }
+    },
+    analytics: { avgTicket: 0 }
+  };
+  let campaigns = [];
+  const productMap = {};
+  const byDay = SNAPSHOT?.byDay || {};
+
+  for (const day of Object.keys(byDay)) {
+    if (day < startDate || day > endDate) continue;
+    const d = byDay[day];
+    if (!d || d.error || !d.summary || d.summary.error) {
+      if (Array.isArray(d?.campaigns)) campaigns = campaigns.concat(d.campaigns);
+      continue;
+    }
+    const s = d.summary;
+    if (s.ordersCount) {
+      summary.ordersCount.approved += s.ordersCount.approved || 0;
+      summary.ordersCount.pending += s.ordersCount.pending || 0;
+      summary.ordersCount.refunded += s.ordersCount.refunded || 0;
+      (s.ordersCount.byProductName || []).forEach(p => {
+        productMap[p.productName] = (productMap[p.productName] || 0) + (p.count || 0);
+      });
+    }
+    if (s.comissions) {
+      summary.comissions.net += s.comissions.net || 0;
+      summary.comissions.pendingGrossRevenue += s.comissions.pendingGrossRevenue || 0;
+      summary.comissions.refundedGrossRevenue += s.comissions.refundedGrossRevenue || 0;
+    }
+    ['pix', 'card', 'boleto', 'others'].forEach(method => {
+      if (!s.statistics?.[method]) return;
+      ['approved', 'pending', 'refused'].forEach(status => {
+        const v = s.statistics[method][status];
+        if (!v) return;
+        summary.statistics[method][status].ordersCount = (summary.statistics[method][status].ordersCount || 0) + (v.ordersCount || 0);
+        summary.statistics[method][status].netAmount = (summary.statistics[method][status].netAmount || 0) + (v.netAmount || 0);
+      });
+    });
+    if (Array.isArray(d.campaigns)) campaigns = campaigns.concat(d.campaigns);
+  }
+
+  summary.ordersCount.byProductName = Object.entries(productMap).map(([productName, count]) => ({ productName, count }));
+  if (summary.ordersCount.approved > 0) {
+    summary.analytics.avgTicket = summary.comissions.net / summary.ordersCount.approved;
+  }
+  return { summary, campaigns };
+}
+
+function mergeSummaries(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  const result = {
+    ordersCount: {
+      approved: (a.ordersCount?.approved || 0) + (b.ordersCount?.approved || 0),
+      pending: (a.ordersCount?.pending || 0) + (b.ordersCount?.pending || 0),
+      refunded: (a.ordersCount?.refunded || 0) + (b.ordersCount?.refunded || 0),
+      byProductName: []
+    },
+    comissions: {
+      net: (a.comissions?.net || 0) + (b.comissions?.net || 0),
+      pendingGrossRevenue: (a.comissions?.pendingGrossRevenue || 0) + (b.comissions?.pendingGrossRevenue || 0),
+      refundedGrossRevenue: (a.comissions?.refundedGrossRevenue || 0) + (b.comissions?.refundedGrossRevenue || 0)
+    },
+    statistics: {},
+    analytics: {}
+  };
+  const productMap = {};
+  (a.ordersCount?.byProductName || []).forEach(p => productMap[p.productName] = (productMap[p.productName] || 0) + (p.count || 0));
+  (b.ordersCount?.byProductName || []).forEach(p => productMap[p.productName] = (productMap[p.productName] || 0) + (p.count || 0));
+  result.ordersCount.byProductName = Object.entries(productMap).map(([productName, count]) => ({ productName, count }));
+
+  ['pix', 'card', 'boleto', 'others'].forEach(method => {
+    result.statistics[method] = {};
+    ['approved', 'pending', 'refused'].forEach(status => {
+      const aV = a.statistics?.[method]?.[status] || {};
+      const bV = b.statistics?.[method]?.[status] || {};
+      result.statistics[method][status] = {
+        ordersCount: (aV.ordersCount || 0) + (bV.ordersCount || 0),
+        netAmount: (aV.netAmount || 0) + (bV.netAmount || 0)
+      };
+    });
+  });
+  result.analytics.avgTicket = result.ordersCount.approved > 0 ? result.comissions.net / result.ordersCount.approved : 0;
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VENDAS MANUAIS — vendas anteriores à configuração do webhook UTMify
+// que NUNCA virão pela API (webhook só captura daqui pra frente).
+// Manter permanentemente para o histórico ficar correto.
+// Para adicionar novas vendas manuais, basta acrescentar ao array.
+// ═══════════════════════════════════════════════════════════════
+const MANUAL_SALES = [];
+
+function getManualSalesInRange(startDate, endDate) {
+  return MANUAL_SALES.filter(s => s.date >= startDate && s.date <= endDate);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GASTOS MANUAIS — gastos fora do Meta Ads (influenciadores, etc).
+// Somam ao realSpent do período, afetando ROAS e Lucro.
+// ═══════════════════════════════════════════════════════════════
+const MANUAL_EXPENSES = [];
+
+function getManualExpensesInRange(startDate, endDate) {
+  return MANUAL_EXPENSES.filter(e => e.date >= startDate && e.date <= endDate);
+}
+
+let currentPeriod = 'today';
+let customRange = null;
+
+function getDateRange(period) {
+  const now = new Date();
+  const fmt = d => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const isoStart = d => fmt(d) + 'T00:00:00-03:00';
+  const isoEnd = d => fmt(d) + 'T23:59:59-03:00';
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  switch (period) {
+    case 'today':
+      return { start: fmt(today), end: fmt(today), from: isoStart(today), to: isoEnd(today) };
+    case 'yesterday': {
+      const y = new Date(today); y.setDate(y.getDate() - 1);
+      return { start: fmt(y), end: fmt(y), from: isoStart(y), to: isoEnd(y) };
+    }
+    case 'last7': {
+      const start = new Date(today); start.setDate(start.getDate() - 6);
+      return { start: fmt(start), end: fmt(today), from: isoStart(start), to: isoEnd(today) };
+    }
+    case 'month': {
+      const first = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { start: fmt(first), end: fmt(today), from: isoStart(first), to: isoEnd(today) };
+    }
+    case 'total': {
+      return { start: '2026-06-19', end: fmt(today), from: '2026-06-19T00:00:00-03:00', to: isoEnd(today) };
+    }
+    case 'custom': {
+      if (!customRange) return getDateRange('today');
+      const [sy, sm, sd] = customRange.start.split('-').map(Number);
+      const [ey, em, ed] = customRange.end.split('-').map(Number);
+      const s = new Date(sy, sm - 1, sd);
+      const e = new Date(ey, em - 1, ed);
+      return { start: customRange.start, end: customRange.end, from: isoStart(s), to: isoEnd(e) };
+    }
+  }
+}
+
+function formatBRL(value) {
+  return 'R$ ' + (value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function mcpCall(toolName, args) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/event-stream'
+    },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: Date.now(),
+      method: 'tools/call',
+      params: { name: toolName, arguments: args }
+    })
+  });
+  const text = await res.text();
+  let json;
+  try { json = JSON.parse(text); }
+  catch { json = JSON.parse(text.split('\n').find(l => l.startsWith('data: '))?.slice(6) || text); }
+  return JSON.parse(json.result.content[0].text);
+}
+
+// Busca dados da UTMify direto da API (sem snapshot histórico).
+async function fetchUtmifyData(startDate, endDate) {
+  await loadSnapshot();
+  let snap = null, api = null;
+
+  if (startDate < MIGRATION_DATE) {
+    const snapEnd = endDate < MIGRATION_DATE ? endDate : prevDay(MIGRATION_DATE);
+    snap = aggregateSnapshot(startDate, snapEnd);
+  }
+
+  if (endDate >= MIGRATION_DATE) {
+    const apiStart = startDate >= MIGRATION_DATE ? startDate : MIGRATION_DATE;
+    const from = apiStart + 'T00:00:00-03:00';
+    const to = endDate + 'T23:59:59-03:00';
+    try {
+      const [summary, campaigns] = await Promise.all([
+        mcpCall('get_dashboard_summary', { dashboardId: DASHBOARD_ID, dateRange: { from, to } }),
+        mcpCall('get_meta_ad_objects', { dashboardId: DASHBOARD_ID, level: 'campaign', dateRange: { from, to } })
+      ]);
+      api = { summary, campaigns: campaigns.results || [] };
+    } catch (e) {
+      console.warn('Erro UTMify nova:', e);
+      api = { summary: { ordersCount:{}, comissions:{}, statistics:{}, analytics:{} }, campaigns: [] };
+    }
+  }
+
+  if (snap && api) {
+    return {
+      summary: mergeSummaries(snap.summary, api.summary),
+      campaigns: [...snap.campaigns, ...api.campaigns]
+    };
+  }
+  return snap || api || { summary: { ordersCount:{}, comissions:{}, statistics:{}, analytics:{} }, campaigns: [] };
+}
+
+function setPeriod(period) {
+  currentPeriod = period;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-period="${period}"]`).classList.add('active');
+
+  const customLabel = document.getElementById('customLabel');
+  if (period === 'custom' && customRange) {
+    const fmtBr = s => { const [y, m, d] = s.split('-'); return `${d}/${m}`; };
+    customLabel.textContent = `${fmtBr(customRange.start)} – ${fmtBr(customRange.end)}`;
+  } else {
+    customLabel.textContent = 'Personalizado';
+  }
+
+  loadData();
+}
+
+function toggleCustomPicker(ev) {
+  ev.stopPropagation();
+  const picker = document.getElementById('customPicker');
+  const willOpen = !picker.classList.contains('open');
+  picker.classList.toggle('open');
+  if (willOpen) {
+    const fromInput = document.getElementById('customFrom');
+    const toInput = document.getElementById('customTo');
+    if (customRange) {
+      fromInput.value = customRange.start;
+      toInput.value = customRange.end;
+    } else if (!fromInput.value || !toInput.value) {
+      const r = getDateRange('today');
+      if (!fromInput.value) fromInput.value = r.start;
+      if (!toInput.value) toInput.value = r.end;
+    }
+  }
+}
+
+function closeCustomPicker() {
+  document.getElementById('customPicker').classList.remove('open');
+}
+
+function applyCustomRange() {
+  const from = document.getElementById('customFrom').value;
+  const to = document.getElementById('customTo').value;
+  if (!from || !to) { alert('Escolha as duas datas antes de aplicar.'); return; }
+  if (from > to) { alert('A data inicial não pode ser maior que a final.'); return; }
+  customRange = { start: from, end: to };
+  closeCustomPicker();
+  setPeriod('custom');
+}
+
+document.addEventListener('click', (e) => {
+  const picker = document.getElementById('customPicker');
+  const wrap = document.querySelector('.filter-custom-wrap');
+  if (picker && picker.classList.contains('open') && wrap && !wrap.contains(e.target)) {
+    picker.classList.remove('open');
+  }
+});
+
+let isLoading = false;
+
+async function loadData() {
+  if (isLoading) return;
+  isLoading = true;
+
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('active');
+
+  const range = getDateRange(currentPeriod);
+  const { start, end } = range;
+
+  document.getElementById('lastUpdate').textContent = 'Carregando...';
+
+  try {
+    // Range total (sempre usado pro card Ticket Medio, independente do filtro)
+    const totalRange = getDateRange('total');
+
+    const [utmifyData, totalUtmifyData] = await Promise.all([
+      // UTMify do período filtrado
+      fetchUtmifyData(range.start, range.end),
+      // Total (se já estamos no total, reusa o periodo. Senao busca separado)
+      currentPeriod === 'total' ? Promise.resolve(null) : fetchUtmifyData(totalRange.start, totalRange.end),
+    ]);
+
+    const data = utmifyData.summary;
+    const metaData = { results: utmifyData.campaigns };
+    const totalData = totalUtmifyData ? totalUtmifyData.summary : null;
+    // Inicializa subobjetos caso a API venha vazia (período sem dados)
+    data.ordersCount = data.ordersCount || {};
+    data.comissions = data.comissions || {};
+    data.statistics = data.statistics || {};
+    data.analytics = data.analytics || {};
+    const { ordersCount: o, comissions: c, statistics: s, analytics: an } = data;
+
+    // ═══ Inject manual sales (workaround for missing webhook) ═══
+    const manualSales = getManualSalesInRange(start, end);
+    if (manualSales.length > 0) {
+      const manualCount = manualSales.length;
+      const manualNetCents = manualSales.reduce((sum, sale) => sum + Math.round(sale.netAmount * 100), 0);
+
+      c.net = (c.net || 0) + manualNetCents;
+      o.approved = (o.approved || 0) + manualCount;
+
+      s.card = s.card || {};
+      s.card.approved = s.card.approved || { ordersCount: 0, netAmount: 0 };
+      s.card.approved.ordersCount = (s.card.approved.ordersCount || 0) + manualCount;
+      s.card.approved.netAmount = (s.card.approved.netAmount || 0) + manualNetCents;
+
+      o.byProductName = o.byProductName || [];
+      const manualByProduct = {};
+      manualSales.forEach(sale => {
+        manualByProduct[sale.productName] = (manualByProduct[sale.productName] || 0) + 1;
+      });
+      Object.entries(manualByProduct).forEach(([productName, count]) => {
+        const existing = o.byProductName.find(p => p.productName === productName);
+        if (existing) existing.count += count;
+        else o.byProductName.push({ productName, count });
+      });
+
+      if (o.approved > 0) {
+        an.avgTicket = c.net / o.approved;
+      }
+    }
+    // ═══ end manual sales injection ═══
+
+    const campaigns = metaData.results || [];
+    const realSpentCents = campaigns.reduce((sum, camp) => sum + (camp.spend || 0), 0);
+    const manualExpenses = getManualExpensesInRange(start, end);
+    const manualExpensesTotal = manualExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const realSpent = (realSpentCents / 100) + manualExpensesTotal;
+    const revenue = c.net / 100;
+    const realRoas = realSpent > 0 ? revenue / realSpent : 0;
+    const realProfit = revenue - realSpent;
+
+    // ─── Update KPI Cards ───
+    const revEl = document.getElementById('revenue');
+    revEl.textContent = formatBRL(revenue);
+    revEl.className = 'card-value' + (revenue > 0 ? ' positive' : revenue < 0 ? ' negative' : '');
+
+    document.getElementById('adSpend').textContent = formatBRL(realSpent);
+
+    const roasEl = document.getElementById('roas');
+    const roasRounded = Math.round(realRoas * 100) / 100;
+    roasEl.textContent = roasRounded.toFixed(2);
+    roasEl.className = 'card-value' + (roasRounded >= 2 ? ' golden' : roasRounded >= 1 ? ' positive' : ' negative');
+
+    const profitEl = document.getElementById('profit');
+    profitEl.textContent = formatBRL(realProfit);
+    profitEl.className = 'card-value' + (realProfit > 0 ? ' positive' : ' negative');
+
+    // ─── Update Galinheiro ───
+    updateChicken(realRoas);
+
+    // ─── Sales Stats ───
+    document.getElementById('approvedOrders').textContent = o.approved;
+    document.getElementById('pendingOrders').textContent = o.pending;
+    document.getElementById('refundedOrders').textContent = o.refunded;
+    document.getElementById('pendingRevenue').textContent = formatBRL(c.pendingGrossRevenue / 100);
+    document.getElementById('refundedRevenue').textContent = formatBRL(c.refundedGrossRevenue / 100);
+    // Ticket Médio Desafio 30D (linha pequena da secao, usa dados do PERIODO filtrado)
+    const desafioProduct = (o.byProductName || []).find(p => /desafio/i.test(p.productName || ''));
+    const desafioCount = desafioProduct ? desafioProduct.count : 0;
+    const avgTicketDesafio = desafioCount > 0 ? revenue / desafioCount : 0;
+    document.getElementById('avgTicketDesafio').textContent = desafioCount > 0 ? formatBRL(avgTicketDesafio) : 'N/A';
+
+    // Ticket Médio CARD (sempre total, independente do filtro)
+    // Se ja estamos no total, usa os mesmos dados. Senao, usa totalData + injeta vendas manuais totais.
+    let totalO, totalC;
+    if (currentPeriod === 'total') {
+      totalO = o;
+      totalC = c;
+    } else if (totalData) {
+      totalO = totalData.ordersCount;
+      totalC = totalData.comissions;
+      // Injeta vendas manuais no range total
+      const totalManualSales = getManualSalesInRange(totalRange.start, totalRange.end);
+      if (totalManualSales.length > 0) {
+        const tNetCents = totalManualSales.reduce((sum, sale) => sum + Math.round(sale.netAmount * 100), 0);
+        totalC.net = (totalC.net || 0) + tNetCents;
+        totalO.byProductName = totalO.byProductName || [];
+        const tByProduct = {};
+        totalManualSales.forEach(sale => {
+          tByProduct[sale.productName] = (tByProduct[sale.productName] || 0) + 1;
+        });
+        Object.entries(tByProduct).forEach(([productName, count]) => {
+          const existing = totalO.byProductName.find(p => p.productName === productName);
+          if (existing) existing.count += count;
+          else totalO.byProductName.push({ productName, count });
+        });
+      }
+    }
+    if (totalO && totalC) {
+      const totalRevenue = totalC.net / 100;
+      const totalDesafioProduct = (totalO.byProductName || []).find(p => /desafio/i.test(p.productName || ''));
+      const totalDesafioCount = totalDesafioProduct ? totalDesafioProduct.count : 0;
+      const totalAvgTicketDesafio = totalDesafioCount > 0 ? totalRevenue / totalDesafioCount : 0;
+      document.getElementById('avgTicketDesafioCard').textContent = totalDesafioCount > 0 ? formatBRL(totalAvgTicketDesafio) : 'N/A';
+    }
+
+    // ─── Payment Stats ───
+    const pixApproved = s.pix?.approved?.ordersCount || 0;
+    const cardApproved = s.card?.approved?.ordersCount || 0;
+    const boletoApproved = s.boleto?.approved?.ordersCount || 0;
+    const othersApproved = s.others?.approved?.ordersCount || 0;
+    const totalPayments = pixApproved + cardApproved + boletoApproved + othersApproved || 1;
+
+    document.getElementById('pixCount').textContent = `${pixApproved} vendas`;
+    document.getElementById('cardCount').textContent = `${cardApproved} vendas`;
+    document.getElementById('boletoCount').textContent = `${boletoApproved} vendas`;
+    document.getElementById('othersCount').textContent = `${othersApproved} vendas`;
+
+    const bar = document.getElementById('paymentBar');
+    bar.innerHTML = '';
+    if (totalPayments > 1) {
+      const add = (cls, count) => { if (count > 0) { const d = document.createElement('div'); d.className = cls; d.style.width = (count / totalPayments * 100) + '%'; bar.appendChild(d); } };
+      add('pix', pixApproved);
+      add('cartao', cardApproved);
+      add('boleto', boletoApproved);
+      add('outros', othersApproved);
+    }
+
+    // ─── Approval Rates ───
+    const cardTotal = (s.card?.approved?.ordersCount || 0) + (s.card?.refused?.ordersCount || 0);
+    const cardRate = cardTotal > 0 ? (s.card.approved.ordersCount / cardTotal) : null;
+    document.getElementById('cardApproval').textContent = cardRate !== null ? (cardRate * 100).toFixed(1) + '%' : 'N/A';
+    document.getElementById('cardApprovalBar').style.width = cardRate !== null ? (cardRate * 100) + '%' : '0%';
+
+    const pixTotal = (s.pix?.approved?.ordersCount || 0) + (s.pix?.pending?.ordersCount || 0);
+    const pixRate = pixTotal > 0 ? (s.pix.approved.ordersCount / pixTotal) : null;
+    document.getElementById('pixApproval').textContent = pixRate !== null ? (pixRate * 100).toFixed(1) + '%' : 'N/A';
+    document.getElementById('pixApprovalBar').style.width = pixRate !== null ? (pixRate * 100) + '%' : '0%';
+
+    // ─── Products ───
+    const prodList = document.getElementById('productsList');
+    if (o.byProductName && o.byProductName.length > 0) {
+      prodList.innerHTML = o.byProductName
+        .sort((a, b) => b.count - a.count)
+        .map(p => `
+          <div class="product-item">
+            <span class="product-name" title="${p.productName}">${p.productName}</span>
+            <span class="product-count">${p.count}</span>
+          </div>
+        `).join('');
+    } else {
+      prodList.innerHTML = '<div class="stat-label" style="text-align:center;padding:20px">Nenhuma venda por aqui</div>';
+    }
+
+    document.getElementById('lastUpdate').textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR');
+  } catch (err) {
+    console.error('Erro ao carregar dados:', err);
+    document.getElementById('lastUpdate').textContent = 'Erro ao carregar';
+  } finally {
+    overlay.classList.remove('active');
+    isLoading = false;
+  }
+}
+
+// ─── Init ───
+eggRain();
+loadData();
+</script>
+</body>
+</html>
