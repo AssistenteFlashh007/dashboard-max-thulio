@@ -1527,7 +1527,10 @@ function getManualSalesInRange(startDate, endDate) {
 // GASTOS MANUAIS — gastos fora do Meta Ads (influenciadores, etc).
 // Somam ao realSpent do período, afetando ROAS e Lucro.
 // ═══════════════════════════════════════════════════════════════
-const MANUAL_EXPENSES = [];
+const MANUAL_EXPENSES = [
+  { date: '2026-06-27', amount: 232.28, description: 'Gasto manual' },
+  { date: '2026-06-28', amount: 700.80, description: 'Gasto manual' },
+];
 
 function getManualExpensesInRange(startDate, endDate) {
   return MANUAL_EXPENSES.filter(e => e.date >= startDate && e.date <= endDate);
